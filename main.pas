@@ -14,11 +14,11 @@ Type
 
 // global variabless
 const
-  MAX = 10; // maximal queue length
-	STACK_SIZE = 10;
+MAX = 10; // maximal queue length
+STACK_SIZE = 10;
 Var
 ip, tp: String;
-N, i, j, k: Integer;
+N, i, j, k, d, perm_cnt: Integer;
 root, root1: ^Node;
 test: Node;
 NodesQueue : array[1..MAX] of Node;
@@ -98,20 +98,29 @@ for i:=1 to max do
         End;
 End;
 
-Procedure createChildrenNodes(node: Node);
+// Procedure to create the three. k is width of a string to be rotated.
+Procedure createChildrenNodes(var node: Node; var depth: Integer);
 Var
-il: Integer;
+il, jl, count: Integer;
 temp: ^Node;
 Begin
-	for il := 1 to N-1 do
+count:=0;
+depth:=depth+1;
+	if(depth<N) then
+	for jl := 1 to N-1 do 
+	for il := 1 to N-jl do
 		Begin
+			count := count+1;
 			New(temp, Init);
 			temp^.perm := node.perm;
-			swap(il,il+1,temp^.perm);
-			writeln('Creating child node with permutation: ', temp^.perm);
-			//swap(il,il+1,node.perm);
-			node.children[il] := temp;
+			swap(jl,il+jl,temp^.perm);
+			writeln('Depth: ',depth,', Child node ', jl,':', il+jl , ' with permutation: ', temp^.perm);
+			node.children[count] := temp;
+			perm_cnt:=perm_cnt+1;
+			//writeln('Child permutation: ', node.children[il]^.perm);
+			createChildrenNodes(node.children[count]^, depth);
 		End;
+	depth:=depth-1;
 End;
 
 Procedure printTree(root: Node);
@@ -126,7 +135,7 @@ Begin
 	End;
 End;
 
-function BFS(root: Node; goal: Node): boolean;
+function BFS(root: Node; goal: iPerm): boolean;
 Var
 children: array[1..10] of ^Node;
 i: integer;
@@ -139,17 +148,20 @@ begin
 	begin
 		t := NodesQueue[HeadIndex];
 		//path += t.getValue();
-
+		writeln('Accessed node: ', t.perm);
 		Dequeue();
 
-		if(t.perm = goal.perm) then
+		if(t.perm = goal) then
 			begin
+			writeln('Match found, exiting BFS');
 			exit(TRUE);
 			end;
-		//children = t.getChildren();
-		for i := 0 to 10 do
+		//children := t.children;
+		if t.children[1]<>Nil then
+		for i := 1 to 10 do
 		begin
-			Enqueue(root.children[i]^);
+			writeln('Enqueuing: ', t.children[i]^.perm);
+			Enqueue(t.children[i]^);
 		end;
 	end;
 	BFS:=TRUE;
@@ -159,41 +171,39 @@ end;
 
 Begin
 // length of the permutation
-N := 5;
+N := 4;
+d:=0;
+perm_cnt:=0;
 InitQueue;
 
 // example permutations
-tp := '12334';
-ip := '34321';
+tp := '1233';
+ip := '3431';
 
 
 writeln('Target permutation: ', tp);
 writeln('Initial permutation: ', ip);
 
-test.perm:='55555';
+test.perm:='5555';
 New(root, Init);
 root^.perm:=ip;
 New(root1, Init);
 root1^.perm:=tp;
 
-Enqueue(test);
+{Enqueue(test);
 Enqueue(root^);
 writeln('Head: ', NodesQueue[HeadIndex].perm);
 writeln('Queuelength: ', QueueLength);
 Dequeue();
 writeln('Head: ', NodesQueue[HeadIndex].perm);
-writeln('Queuelength: ', QueueLength);
+writeln('Queuelength: ', QueueLength);}
 
 
-{j := 1;
-k := 5;
 
-createChildrenNodes(root^);
-printTree(root^);
-
-
-swap(j,k,ip);
-writeln(ip);}
+createChildrenNodes(root^, d);
+//writeln(root^.children[1]^.perm);
+//BFS(root^, '12345');
 
 
+writeln('Permutations count: ', perm_cnt);
 End.
