@@ -1,11 +1,12 @@
 Program missionX;
 
 Type
-	iPerm    = String[5];
+	iPerm    = String[4];
 	// ---------------class Node-------------------
 	Node = Object
 				perm : iPerm;
 				children: array[1..10] of ^Node;
+				parent: ^Node;
 				Constructor Init;
 				Destructor Done;
 
@@ -14,7 +15,7 @@ Type
 
 // global variabless
 const
-MAX = 10; // maximal queue length
+MAX = 1000; // maximal queue length
 STACK_SIZE = 10;
 Var
 ip, tp: String;
@@ -22,8 +23,12 @@ N, i, j, k, d, perm_cnt: Integer;
 root, root1: ^Node;
 test: Node;
 NodesQueue : array[1..MAX] of Node;
+//path: array[1..4] of Node;
 // for queue
 HeadIndex, RearIndex, QueueLength: Integer;
+// for stack
+myStack : Array[1..STACK_SIZE] of Node;
+	topPointer : Integer;
 
 Constructor Node.Init;
 begin
@@ -75,6 +80,55 @@ begin
 	QueueLength := 0;
 end;
 
+// http://www.pascal-programming.info/articles/stack.php
+// --------------------- stack---------------------
+Procedure InitStack;
+Begin
+	topPointer := 0;
+End;
+
+Function IsEmpty : Boolean;
+Begin
+	IsEmpty := False;
+	If (topPointer = 0) Then
+		IsEmpty := true;
+End;
+
+Function IsFull : Boolean;
+Begin
+	IsFull := False;
+	If ((topPointer + 1) = STACK_SIZE) Then
+		IsFull := True;
+End;
+
+Function Pop : Node;
+
+Begin
+	//Pop := nil;
+
+	If not IsEmpty Then
+	Begin
+		writeln('Poping: ', myStack[topPointer].perm);
+		Pop := myStack[topPointer];
+		topPointer := topPointer - 1; 
+	End;
+End;
+
+Procedure Push(item : Node);
+Begin
+	If not IsFull Then
+	Begin
+		writeln('Pushing: ', item.perm);
+		myStack[topPointer+1] := item;
+		topPointer := topPointer + 1;
+	End;
+End; 
+
+Function GetSize : Integer;
+Begin
+	GetSize := topPointer;
+End;
+
 // procedura otoci substring v retazci y zacinajuci na indexe A a konciaci na indexe B
 Procedure swap(A: Integer; B: Integer; Var y: String);
 Var
@@ -113,8 +167,9 @@ depth:=depth+1;
 			count := count+1;
 			New(temp, Init);
 			temp^.perm := node.perm;
+			temp^.parent := @node;
 			swap(jl,il+jl,temp^.perm);
-			writeln('Depth: ',depth,', Child node ', jl,':', il+jl , ' with permutation: ', temp^.perm);
+			//writeln('Depth: ',depth,', Child node ', jl,':', il+jl , ' with permutation: ', temp^.perm);
 			node.children[count] := temp;
 			perm_cnt:=perm_cnt+1;
 			//writeln('Child permutation: ', node.children[il]^.perm);
@@ -147,6 +202,7 @@ begin
 	while(QueueLength<>0) do
 	begin
 		t := NodesQueue[HeadIndex];
+		Push(t);
 		//path += t.getValue();
 		writeln('Accessed node: ', t.perm);
 		Dequeue();
@@ -158,16 +214,23 @@ begin
 			end;
 		//children := t.children;
 		if t.children[1]<>Nil then
-		for i := 1 to 10 do
+		for i := 1 to 6 do
 		begin
-			writeln('Enqueuing: ', t.children[i]^.perm);
+			//writeln('Enqueuing: ', t.children[i]^.perm);
 			Enqueue(t.children[i]^);
 		end;
+		Pop();
 	end;
 	BFS:=TRUE;
 end;
 
-
+procedure printStack();
+	begin
+		while not IsEmpty do
+			begin
+			writeln('Cesta: ',Pop().perm);
+			end; 
+	end;
 
 Begin
 // length of the permutation
@@ -175,9 +238,10 @@ N := 4;
 d:=0;
 perm_cnt:=0;
 InitQueue;
+InitStack;
 
 // example permutations
-tp := '1233';
+tp := '1433';
 ip := '3431';
 
 
@@ -202,7 +266,8 @@ writeln('Queuelength: ', QueueLength);}
 
 createChildrenNodes(root^, d);
 //writeln(root^.children[1]^.perm);
-//BFS(root^, '12345');
+BFS(root^, tp);
+printStack();
 
 
 writeln('Permutations count: ', perm_cnt);
